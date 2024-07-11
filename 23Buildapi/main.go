@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -37,6 +38,22 @@ func (c *Course) IsEmpty() bool {
 }
 
 func main() {
+	fmt.Println("API's")
+	r := mux.NewRouter()
+
+	//seeding
+
+	courses = append(courses, Course{CourseId: "2", CourseName: "Reactjs", Price: 299, Author: &Author{Fullname: "Khaushik", Website: "lco.dev"}})
+	courses = append(courses, Course{CourseId: "4", CourseName: "MERN Stack", Price: 199, Author: &Author{Fullname: "Khaushik", Website: "go.dev"}})
+	//routing
+	r.HandleFunc("/", serveHome).Methods("GET")
+	r.HandleFunc("/courses", getAllCourses).Methods("GET")
+	r.HandleFunc("/course/{id}", getOneCourse).Methods("GET")
+	r.HandleFunc("/course", createOneCourse).Methods("POST")
+	r.HandleFunc("/course/{id}", updateOneCourse).Methods("PUT")
+	r.HandleFunc("/course/{id}", deletOneCourse).Methods("DELETE")
+	//Listen to a port
+	log.Fatal(http.ListenAndServe(":4000", r))
 
 }
 
@@ -92,7 +109,8 @@ func createOneCourse(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode("No data inside json")
 		return
 	}
-
+	//TODO: Check only if title is duplicate
+	//loop,title matches with course.CourseName
 	//generate a uniqe id,convert them to string
 	//append this new course into courses
 
@@ -101,4 +119,45 @@ func createOneCourse(w http.ResponseWriter, r *http.Request) {
 	courses = append(courses, course)
 	json.NewEncoder(w).Encode(course)
 	return
+}
+
+func updateOneCourse(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Update One Course")
+	w.Header().Set("Content-Type", "application/json")
+
+	//first - grab id from request
+
+	params := mux.Vars(r)
+
+	//loop , id , remove, add with my ID
+
+	for index, course := range courses {
+		if course.CourseId == params["id"] {
+			courses = append(courses[:index], courses[index+1:]...)
+			var course Course
+			_ = json.NewDecoder(r.Body).Decode(&course)
+			course.CourseId = params["id"]
+			courses = append(courses, course)
+			json.NewEncoder(w).Encode(course)
+			return
+		}
+	}
+	//TODO: send a response when id is not found
+
+}
+
+func deletOneCourse(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Delete One Course")
+	w.Header().Set("Content-Type", "application/json")
+
+	params := mux.Vars(r)
+
+	//loop,id,remove(index,index+1)
+	for index, course := range courses {
+		if course.CourseId == params["id"] {
+			courses = append(courses[:index], courses[index+1:]...)
+			json.NewEncoder(w).Encode("Id is removed successfully")
+			break
+		}
+	}
 }
