@@ -16,6 +16,7 @@ type course struct {
 func main() {
 	fmt.Println("Welcome to JSON")
 	EncodeJSON()
+	DecodeJson()
 
 }
 
@@ -31,6 +32,37 @@ func EncodeJSON() {
 	finalJson, err := json.MarshalIndent(lcoCourses, "", "\t") //consumable json data
 	CheckError(err)
 	fmt.Printf("%s\n", finalJson)
+}
+
+func DecodeJson() {
+	jsonDataFromWeb := []byte(`
+	{
+                "coursename": "ReactJS BootCamp",
+                "Price": 299,
+                "website": "Udemy",
+                "tags": ["WebDev","js"]
+    }
+	`)
+
+	var lcocourse course
+
+	checkValid := json.Valid(jsonDataFromWeb)
+
+	if checkValid {
+		fmt.Println("JSON is valid")
+		json.Unmarshal(jsonDataFromWeb, &lcocourse)
+		fmt.Printf("%#v\n", lcocourse)
+	} else {
+		fmt.Println("JSON not valid")
+	}
+
+	var myOnlineData map[string]interface{}
+	json.Unmarshal(jsonDataFromWeb, &myOnlineData)
+	fmt.Printf("%#v\n", myOnlineData)
+
+	for key, val := range myOnlineData {
+		fmt.Printf("Key is %v Value is %v and type is: %T\n", key, val, val)
+	}
 }
 
 func CheckError(err error) {
